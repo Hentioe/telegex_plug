@@ -15,7 +15,8 @@ defmodule Telegex.Plug.Commander do
 
       @impl true
       def match(text, state) do
-        if text == @command || text == "#{@command}@#{bot_username}" do
+        # if text == @command || text == "#{@command}@#{bot_username}" do
+        if text == @command do
           {:match, state}
         else
           {:nomatch, state}
@@ -34,7 +35,7 @@ defmodule Telegex.Plug.Commander do
 
       @impl true
       def call(%{message: %{text: text} = message} = _update, state) do
-        case match(text) do
+        case match(text, state) do
           {:match, state} ->
             handle(message, state)
 

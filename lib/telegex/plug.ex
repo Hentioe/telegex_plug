@@ -4,7 +4,7 @@ defmodule Telegex.Plug do
   """
 
   defmacro __using__(opts) do
-    if Enum.empty?(opts), do: implement_plug(), else: implement_preset(opts)
+    if Enum.empty?(opts), do: implement_plug(), else: implement_preset(hd(opts))
   end
 
   defp implement_plug do
@@ -25,7 +25,7 @@ defmodule Telegex.Plug do
     end
   end
 
-  defp implement_preset({:caller, prefix}) do
+  defp implement_preset({:caller, [{:prefix, prefix}]}) do
     quote do
       use Telegex.Plug.Caller, unquote(prefix)
     end

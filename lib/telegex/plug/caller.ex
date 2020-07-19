@@ -11,11 +11,11 @@ defmodule Telegex.Plug.Caller do
       use Telegex.Plug
 
       @behaviour Telegex.Plug.Caller
-      @command prefix
+      @prefix unquote(prefix)
 
       @impl true
       def match(data) do
-        if String.starts_with?("#{prefix}") do
+        if String.starts_with?(data, @prefix) do
           :match
         else
           :nomatch
