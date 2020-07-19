@@ -1,13 +1,32 @@
 defmodule TelegexPlug.MixProject do
   use Mix.Project
 
+  @description "The abstract design of Telegram's update processing."
+  @version "0.0.1-dev"
+
   def project do
     [
       app: :telegex_plug,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      description: @description,
+      package: package(),
+      name: "Telegex.Plug",
+      source_url: "https://github.com/Hentioe/telegex_plug",
+      docs: [
+        # The main page in the docs
+        main: "readme",
+        extras: ["README.md"]
+      ]
+    ]
+  end
+
+  defp package do
+    [
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/Hentioe/telegex_marked"}
     ]
   end
 
