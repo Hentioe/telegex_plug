@@ -4,6 +4,8 @@ defmodule Telegex.Plug.Preset do
   """
 
   defmacro __using__(opts) do
+    opts = if is_list(opts), do: opts, else: [opts]
+
     opts |> hd() |> implement_preset()
   end
 
