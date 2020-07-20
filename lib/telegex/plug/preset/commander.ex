@@ -7,30 +7,18 @@ defmodule Telegex.Plug.Preset.Commander do
   @type match_result :: {:match | :nomatch, Telegex.Plug.state()}
 
   defmacro __using__(command) when is_atom(command) do
+    command = "/#{command}"
+
     quote do
       use Telegex.Plug
 
       @behaviour Telegex.Plug.Preset.Commander
-      @command "/#{unquote(command)}"
 
       @impl true
-      def match(text, state) do
-        if text == @command || text == "#{@command}@#{Telegex.Plug.get_usename()}" do
-          {:match, state}
-        else
-          {:nomatch, state}
-        end
-      end
+      def __preset__, do: :commander
 
-      @impl true
-      def call(%{message: nil} = _update, state) do
-        {:ignored, state}
-      end
-
-      @impl true
-      def call(%{message: %{text: nil}} = _update, state) do
-        {:ignored, state}
-      end
+      unquote(def_match(command))
+      unquote(def_ignore_calls())
 
       @impl true
       def call(%{message: %{text: text} = message} = _update, state) do
@@ -44,6 +32,29 @@ defmodule Telegex.Plug.Preset.Commander do
       end
 
       defoverridable match: 2
+    end
+  end
+
+  defp def_match(command) do
+    quote do
+      @impl true
+      def match(text, state) do
+        if text == unquote(command) || text == "#{unquote(command)}@#{Telegex.Plug.get_usename()}" do
+          {:match, state}
+        else
+          {:nomatch, state}
+        end
+      end
+    end
+  end
+
+  defp def_ignore_calls do
+    quote do
+      @impl true
+      def call(%{message: nil} = _update, state), do: {:ignored, state}
+
+      @impl true
+      def call(%{message: %{text: nil}} = _update, state), do: {:ignored, state}
     end
   end
 

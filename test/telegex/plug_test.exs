@@ -18,6 +18,11 @@ defmodule Telegex.PlugTest do
     def call(%{update_id: update_id} = _update, state) do
       {:ok, Map.put(state, :update_id, update_id)}
     end
+
+    @impl true
+    def __preset__ do
+      :handler
+    end
   end
 
   test "call/2" do

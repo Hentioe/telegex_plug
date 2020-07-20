@@ -13,6 +13,9 @@ defmodule Telegex.Plug.Preset.Handler do
       @behaviour Telegex.Plug.Preset.Handler
 
       @impl true
+      def __preset__, do: :handler
+
+      @impl true
       def call(%{message: nil} = _update, state) do
         {:ignored, state}
       end

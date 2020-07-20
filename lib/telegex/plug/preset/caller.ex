@@ -14,6 +14,9 @@ defmodule Telegex.Plug.Preset.Caller do
       @prefix unquote(prefix)
 
       @impl true
+      def __preset__, do: :caller
+
+      @impl true
       def match(data) do
         if String.starts_with?(data, @prefix) do
           :match
