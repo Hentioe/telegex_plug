@@ -21,4 +21,14 @@ defmodule Telegex.Plug do
   """
   @callback call(update :: Telegex.Model.Update.t(), state :: state()) ::
               stateless() | stateful()
+
+  @spec update_username(String.t()) :: :ok
+  def update_username(username) when is_binary(username) do
+    Telegex.Plug.Cache.put(:username, username)
+  end
+
+  @spec get_usename :: String.t()
+  def get_usename do
+    Telegex.Plug.Cache.get(:username)
+  end
 end

@@ -15,8 +15,7 @@ defmodule Telegex.Plug.Preset.Commander do
 
       @impl true
       def match(text, state) do
-        # if text == @command || text == "#{@command}@#{bot_username}" do
-        if text == @command do
+        if text == @command || text == "#{@command}@#{Telegex.Plug.get_usename()}" do
           {:match, state}
         else
           {:nomatch, state}

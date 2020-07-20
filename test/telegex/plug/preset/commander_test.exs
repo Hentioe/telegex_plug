@@ -29,6 +29,8 @@ defmodule Telegex.Plug.Preset.CommanderTest do
   end
 
   test "call/2" do
+    :ok = Telegex.Plug.update_username("test_bot")
+
     r = PingCommanderPlug.call(%{message: %{text: nil}}, %{})
 
     assert r == {:ignored, %{}}
@@ -40,6 +42,15 @@ defmodule Telegex.Plug.Preset.CommanderTest do
     r = PingCommanderPlug.call(%{message: %{text: "/ping"}}, %{})
 
     assert r == {:ok, %{response: "pong"}}
+
+    r = PingCommanderPlug.call(%{message: %{text: "/ping@"}}, %{})
+
+    assert r == {:ignored, %{}}
+
+    r = PingCommanderPlug.call(%{message: %{text: "/ping@test_bot"}}, %{})
+
+    assert r == {:ok, %{response: "pong"}}
+
     r = CustomMatchPingCommanderPlug.call(%{message: %{text: nil}}, %{})
 
     assert r == {:ignored, %{}}
