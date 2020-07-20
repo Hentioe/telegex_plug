@@ -1,4 +1,4 @@
-defmodule Telegex.Plug.Caller do
+defmodule Telegex.Plug.Preset.Caller do
   @moduledoc """
   Callback processing plug-in.
   """
@@ -10,7 +10,7 @@ defmodule Telegex.Plug.Caller do
     quote do
       use Telegex.Plug
 
-      @behaviour Telegex.Plug.Caller
+      @behaviour Telegex.Plug.Preset.Caller
       @prefix unquote(prefix)
 
       @impl true

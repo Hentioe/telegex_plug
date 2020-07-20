@@ -1,4 +1,4 @@
-defmodule Telegex.Plug.Handler do
+defmodule Telegex.Plug.Preset.Handler do
   @moduledoc """
   Message processing plug-in.
   """
@@ -10,7 +10,7 @@ defmodule Telegex.Plug.Handler do
     quote do
       use Telegex.Plug
 
-      @behaviour Telegex.Plug.Handler
+      @behaviour Telegex.Plug.Preset.Handler
 
       @impl true
       def call(%{message: nil} = _update, state) do

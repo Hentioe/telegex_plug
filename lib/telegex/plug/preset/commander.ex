@@ -1,4 +1,4 @@
-defmodule Telegex.Plug.Commander do
+defmodule Telegex.Plug.Preset.Commander do
   @moduledoc """
   Command processing plug-in.
   """
@@ -10,7 +10,7 @@ defmodule Telegex.Plug.Commander do
     quote do
       use Telegex.Plug
 
-      @behaviour Telegex.Plug.Commander
+      @behaviour Telegex.Plug.Preset.Commander
       @command "/#{unquote(command)}"
 
       @impl true

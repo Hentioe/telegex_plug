@@ -1,8 +1,8 @@
-defmodule Telegex.Plug.CallerTest do
+defmodule Telegex.Plug.Preset.CallerTest do
   use ExUnit.Case
 
   defmodule VerificationCallerPlug do
-    use Telegex.Plug, caller: [prefix: "verification:"]
+    use Telegex.Plug.Preset, caller: [prefix: "verification:"]
 
     @impl true
     def handle(%{data: data} = _callback_query, _state) do
