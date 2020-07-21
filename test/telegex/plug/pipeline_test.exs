@@ -54,10 +54,10 @@ defmodule Telegex.Plug.PipelineTest do
   end
 
   test "call/2" do
-    Pipeline.install([GetUpdateIDPreheater])
-    Pipeline.install([PingCommander])
-    Pipeline.install([GetMessageTextHandler])
-    Pipeline.install([VerificationCaller])
+    Pipeline.install_all([GetUpdateIDPreheater])
+    Pipeline.install_all([PingCommander])
+    Pipeline.install_all([GetMessageTextHandler])
+    Pipeline.install_all([VerificationCaller])
 
     update = %{update_id: 999, callback_query: nil, message: %{text: "/ping"}}
     snapshots = Pipeline.call(update, %{})
