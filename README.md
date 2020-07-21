@@ -18,4 +18,6 @@ def deps do
 end
 ```
 
+## Usage
+
 [WIP]

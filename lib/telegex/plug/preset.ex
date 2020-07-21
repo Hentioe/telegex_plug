@@ -4,9 +4,7 @@ defmodule Telegex.Plug.Preset do
   """
 
   defmacro __using__(opts) do
-    opts = if is_list(opts), do: opts, else: [opts]
-
-    opts |> hd() |> implement_preset()
+    implement_preset(opts)
   end
 
   defp implement_preset(:handler) do
@@ -21,13 +19,13 @@ defmodule Telegex.Plug.Preset do
     end
   end
 
-  defp implement_preset({:commander, command}) do
+  defp implement_preset([{:commander, command}]) do
     quote do
       use Telegex.Plug.Preset.Commander, unquote(command)
     end
   end
 
-  defp implement_preset({:caller, [{:prefix, prefix}]}) do
+  defp implement_preset([{:caller, [{:prefix, prefix}]}]) do
     quote do
       use Telegex.Plug.Preset.Caller, unquote(prefix)
     end

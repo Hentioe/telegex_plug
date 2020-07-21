@@ -22,7 +22,7 @@ defmodule Telegex.Plug.PipelineTest do
   end
 
   defmodule GetMessageTextHandler do
-    use Telegex.Plug.Preset, [:handler]
+    use Telegex.Plug.Preset, :handler
 
     @impl true
     def match(%{text: nil} = _message, state), do: {:nomatch, state}

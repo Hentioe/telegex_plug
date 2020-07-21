@@ -23,6 +23,8 @@ defmodule Telegex.Plug do
   """
   @callback call(update :: Telegex.Model.Update.t(), state :: state()) ::
               stateless() | stateful()
+
+  @doc false
   @callback __preset__() :: preset
 
   @doc """

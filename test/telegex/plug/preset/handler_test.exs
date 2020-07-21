@@ -2,7 +2,7 @@ defmodule Telegex.Plug.Preset.HandlerTest do
   use ExUnit.Case
 
   defmodule UpcaseMessageTextPlug do
-    use Telegex.Plug.Preset, [:handler]
+    use Telegex.Plug.Preset, :handler
 
     @impl true
     def match(%{text: nil} = _message, state) do
