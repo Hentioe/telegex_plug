@@ -7,7 +7,12 @@ defmodule Telegex.Plug.Pipeline do
 
   use Agent
 
-  defstruct handlers: [], commanders: [], callers: []
+  alias Telegex.Plug
+  alias Telegex.Model.Update
+
+  @type plug :: atom()
+
+  defstruct preheaters: [], handlers: [], commanders: [], callers: []
 
   @doc false
   def start_link(_) do
@@ -20,6 +25,7 @@ defmodule Telegex.Plug.Pipeline do
   def install(plug) when is_atom(plug) do
     update_fun = fn state ->
       case Telegex.Plug.__preset__(plug) do
+        :preheater -> Map.put(state, :preheaters, state.preheaters ++ [plug])
         :handler -> Map.put(state, :handlers, state.handlers ++ [plug])
         :commander -> Map.put(state, :commanders, state.commanders ++ [plug])
         :caller -> Map.put(state, :callers, state.callers ++ [plug])
@@ -29,7 +35,10 @@ defmodule Telegex.Plug.Pipeline do
     Agent.update(__MODULE__, update_fun)
   end
 
-  def install(plugs) when is_list(plugs) do
+  @doc """
+  Install multiple plugs into the pipeline.
+  """
+  def install_all(plugs) when is_list(plugs) do
     Enum.map(plugs, &install/1)
   end
 
@@ -41,9 +50,17 @@ defmodule Telegex.Plug.Pipeline do
 
     update_fun = fn state ->
       case Telegex.Plug.__preset__(plug) do
-        :handler -> Enum.filter(state.handlers, filter_fun)
-        :commander -> Enum.filter(state.commanders, filter_fun)
-        :caller -> Enum.filter(state.callers, filter_fun)
+        :preheater ->
+          Map.put(state, :preheaters, Enum.filter(state.preheaters, filter_fun))
+
+        :handler ->
+          Map.put(state, :handlers, Enum.filter(state.handlers, filter_fun))
+
+        :commander ->
+          Map.put(state, :commanders, Enum.filter(state.commanders, filter_fun))
+
+        :caller ->
+          Map.put(state, :callers, Enum.filter(state.callers, filter_fun))
       end
     end
 
@@ -74,7 +91,15 @@ defmodule Telegex.Plug.Pipeline do
     Agent.get(__MODULE__, fn state -> state.callers end)
   end
 
-  @typep snapshot :: {atom(), Telegex.Plug.stateless() | Telegex.Plug.stateful()}
+  @doc """
+  Get a list of plugs whose preset category is `preheater`.
+  """
+  @spec preheaters :: [atom()]
+  def preheaters do
+    Agent.get(__MODULE__, fn state -> state.preheaters end)
+  end
+
+  @typep snapshot :: {atom(), Plug.stateless() | Plug.stateful()}
 
   @doc """
   Call all plugs in the pipeline.
@@ -83,16 +108,29 @@ defmodule Telegex.Plug.Pipeline do
 
   At the same time, this function will return all the call results of Plug, which are stored in order in a list.
   """
-  @spec call(Telegex.Model.Update.t(), Telegex.Plug.state()) :: [snapshot()]
+  @spec call(Update.t(), Plug.state()) :: [snapshot()]
   def call(update, state) do
+    {state, preheaters_snapshots} = preheaters_call(preheaters(), update, state)
     stateful_snapshots = stateful_call(commanders() ++ handlers(), update, state)
     stateless_snapshots = stateless_call(callers(), update, state)
 
-    stateful_snapshots ++ stateless_snapshots
+    preheaters_snapshots ++ stateful_snapshots ++ stateless_snapshots
   end
 
-  @spec stateful_call([atom()], Telegex.Model.Update.t(), Telegex.Plug.state(), [snapshot()]) ::
-          [snapshot()]
+  @spec preheaters_call([plug()], Update.t(), Plug.state()) :: {Plug.state(), [snapshot()]}
+  defp preheaters_call(plugs, update, state) do
+    snapshots = stateful_call(plugs, update, state)
+
+    case List.last(snapshots) do
+      {_, {_, state}} ->
+        {state, snapshots}
+
+      nil ->
+        {state, snapshots}
+    end
+  end
+
+  @spec stateful_call([atom()], Update.t(), Plug.state(), [snapshot()]) :: [snapshot()]
   defp stateful_call(plugs, update, state, snapshots \\ []) do
     {plug, plugs} = List.pop_at(plugs, 0)
 
@@ -104,13 +142,12 @@ defmodule Telegex.Plug.Pipeline do
     end
   end
 
-  @spec stateless_call([atom()], Telegex.Model.Update.t(), Telegex.Plug.state()) ::
-          [snapshot()]
+  @spec stateless_call([atom()], Update.t(), Plug.state()) :: [snapshot()]
   defp stateless_call(plugs, update, state) do
     Enum.map(plugs, &call_one(&1, update, state))
   end
 
-  @spec call_one(atom(), Telegex.Model.Update.t(), Telegex.Plug.state()) :: snapshot()
+  @spec call_one(atom(), Update.t(), Plug.state()) :: snapshot()
   defp call_one(plug, update, state) do
     {plug, apply(plug, :call, [update, state])}
   end

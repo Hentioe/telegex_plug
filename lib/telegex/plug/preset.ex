@@ -15,6 +15,12 @@ defmodule Telegex.Plug.Preset do
     end
   end
 
+  defp implement_preset(:preheater) do
+    quote do
+      use Telegex.Plug.Preset.Preheater
+    end
+  end
+
   defp implement_preset({:commander, command}) do
     quote do
       use Telegex.Plug.Preset.Commander, unquote(command)

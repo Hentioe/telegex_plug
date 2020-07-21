@@ -7,17 +7,16 @@ defmodule Telegex.Plug.Preset.Commander do
   @type match_result :: {:match | :nomatch, Telegex.Plug.state()}
 
   defmacro __using__(command) when is_atom(command) do
-    command = "/#{command}"
-
     quote do
       use Telegex.Plug
 
       @behaviour Telegex.Plug.Preset.Commander
+      @command "/#{unquote(command)}"
 
       @impl true
       def __preset__, do: :commander
 
-      unquote(def_match(command))
+      unquote(def_match())
       unquote(def_ignore_calls())
 
       @impl true
@@ -35,11 +34,11 @@ defmodule Telegex.Plug.Preset.Commander do
     end
   end
 
-  defp def_match(command) do
+  defp def_match do
     quote do
       @impl true
       def match(text, state) do
-        if text == unquote(command) || text == "#{unquote(command)}@#{Telegex.Plug.get_usename()}" do
+        if text == @command || text == "#{@command}@#{Telegex.Plug.get_usename()}" do
           {:match, state}
         else
           {:nomatch, state}

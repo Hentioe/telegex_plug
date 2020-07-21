@@ -12,11 +12,8 @@ defmodule Telegex.Plug.PipelineTest do
     end
   end
 
-  defmodule GetUpdateIDHandler do
-    use Telegex.Plug
-
-    @impl true
-    def __preset__, do: :handler
+  defmodule GetUpdateIDPreheater do
+    use Telegex.Plug.Preset, :preheater
 
     @impl true
     def call(%{update_id: update_id} = _update, state) do
@@ -57,28 +54,29 @@ defmodule Telegex.Plug.PipelineTest do
   end
 
   test "call/2" do
+    Pipeline.install([GetUpdateIDPreheater])
     Pipeline.install([PingCommander])
-    Pipeline.install([GetUpdateIDHandler, GetMessageTextHandler])
+    Pipeline.install([GetMessageTextHandler])
     Pipeline.install([VerificationCaller])
 
     update = %{update_id: 999, callback_query: nil, message: %{text: "/ping"}}
     snapshots = Pipeline.call(update, %{})
 
     assert snapshots == [
-             {PingCommander, {:ok, %{response: "pong"}}},
-             {GetUpdateIDHandler, {:ok, %{response: "pong", update_id: 999}}},
+             {GetUpdateIDPreheater, {:ok, %{update_id: 999}}},
+             {PingCommander, {:ok, %{update_id: 999, response: "pong"}}},
              {GetMessageTextHandler, {:ok, %{response: "pong", text: "/ping", update_id: 999}}},
-             {VerificationCaller, {:ignored, %{}}}
+             {VerificationCaller, {:ignored, %{update_id: 999}}}
            ]
 
     update = %{update_id: 999, callback_query: %{data: "verification:3"}, message: nil}
     snapshots = Pipeline.call(update, %{})
 
     assert snapshots == [
-             {PingCommander, {:ignored, %{}}},
-             {GetUpdateIDHandler, {:ok, %{update_id: 999}}},
+             {GetUpdateIDPreheater, {:ok, %{update_id: 999}}},
+             {PingCommander, {:ignored, %{update_id: 999}}},
              {GetMessageTextHandler, {:ignored, %{update_id: 999}}},
-             {VerificationCaller, {:ok, %{result: "success"}}}
+             {VerificationCaller, {:ok, %{update_id: 999, result: "success"}}}
            ]
   end
 end
