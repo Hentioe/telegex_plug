@@ -2,7 +2,7 @@ defmodule TelegexPlug.MixProject do
   use Mix.Project
 
   @description "The abstract design of Telegram's update processing."
-  @version "0.0.4"
+  @version "0.1.0-rc.0"
 
   def project do
     [
