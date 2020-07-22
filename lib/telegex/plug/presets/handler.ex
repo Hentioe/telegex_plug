@@ -1,4 +1,4 @@
-defmodule Telegex.Plug.Preset.Handler do
+defmodule Telegex.Plug.Presets.Handler do
   @moduledoc """
   Message processing plug-in.
   """
@@ -10,7 +10,7 @@ defmodule Telegex.Plug.Preset.Handler do
     quote do
       use Telegex.Plug
 
-      @behaviour Telegex.Plug.Preset.Handler
+      @behaviour Telegex.Plug.Presets.Handler
 
       @impl true
       def __preset__, do: :handler

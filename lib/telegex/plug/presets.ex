@@ -1,4 +1,4 @@
-defmodule Telegex.Plug.Preset do
+defmodule Telegex.Plug.Presets do
   @moduledoc """
   Preset Plug-based abstraction.
   """
@@ -9,25 +9,25 @@ defmodule Telegex.Plug.Preset do
 
   defp implement_preset(:handler) do
     quote do
-      use Telegex.Plug.Preset.Handler
+      use Telegex.Plug.Presets.Handler
     end
   end
 
   defp implement_preset(:preheater) do
     quote do
-      use Telegex.Plug.Preset.Preheater
+      use Telegex.Plug.Presets.Preheater
     end
   end
 
   defp implement_preset([{:commander, command}]) do
     quote do
-      use Telegex.Plug.Preset.Commander, unquote(command)
+      use Telegex.Plug.Presets.Commander, unquote(command)
     end
   end
 
   defp implement_preset([{:caller, [{:prefix, prefix}]}]) do
     quote do
-      use Telegex.Plug.Preset.Caller, unquote(prefix)
+      use Telegex.Plug.Presets.Caller, unquote(prefix)
     end
   end
 end

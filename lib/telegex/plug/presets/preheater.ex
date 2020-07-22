@@ -1,4 +1,4 @@
-defmodule Telegex.Plug.Preset.Preheater do
+defmodule Telegex.Plug.Presets.Preheater do
   @moduledoc """
   Preheating plug-in.
   """

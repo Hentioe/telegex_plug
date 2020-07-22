@@ -1,8 +1,8 @@
-defmodule Telegex.Plug.Preset.CommanderTest do
+defmodule Telegex.Plug.Presets.CommanderTest do
   use ExUnit.Case
 
   defmodule PingCommanderPlug do
-    use Telegex.Plug.Preset, commander: :ping
+    use Telegex.Plug.Presets, commander: :ping
 
     @impl true
     def handle(_message, state) do
@@ -11,7 +11,7 @@ defmodule Telegex.Plug.Preset.CommanderTest do
   end
 
   defmodule CustomMatchPingCommanderPlug do
-    use Telegex.Plug.Preset, commander: :ping
+    use Telegex.Plug.Presets, commander: :ping
 
     @impl true
     def match(text, state) do

@@ -4,7 +4,7 @@ defmodule Telegex.Plug.PipelineTest do
   alias Telegex.Plug.Pipeline
 
   defmodule PingCommander do
-    use Telegex.Plug.Preset, commander: :ping
+    use Telegex.Plug.Presets, commander: :ping
 
     @impl true
     def handle(_message, state) do
@@ -13,7 +13,7 @@ defmodule Telegex.Plug.PipelineTest do
   end
 
   defmodule GetUpdateIDPreheater do
-    use Telegex.Plug.Preset, :preheater
+    use Telegex.Plug.Presets, :preheater
 
     @impl true
     def call(%{update_id: update_id} = _update, state) do
@@ -22,7 +22,7 @@ defmodule Telegex.Plug.PipelineTest do
   end
 
   defmodule GetMessageTextHandler do
-    use Telegex.Plug.Preset, :handler
+    use Telegex.Plug.Presets, :handler
 
     @impl true
     def match(%{text: nil} = _message, state), do: {:nomatch, state}
@@ -38,7 +38,7 @@ defmodule Telegex.Plug.PipelineTest do
   end
 
   defmodule VerificationCaller do
-    use Telegex.Plug.Preset, caller: [prefix: "verification:"]
+    use Telegex.Plug.Presets, caller: [prefix: "verification:"]
 
     @impl true
     def handle(%{data: data} = _callback_query, state) do
