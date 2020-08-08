@@ -21,18 +21,28 @@ defmodule Telegex.Plug.Pipeline do
 
   @doc """
   Install a plug into the pipeline.
+
+  *Notes*: Repeated installation will not add plug-ins.
   """
   def install(plug) when is_atom(plug) do
-    update_fun = fn state ->
-      case Telegex.Plug.__preset__(plug) do
-        :preheater -> Map.put(state, :preheaters, state.preheaters ++ [plug])
-        :handler -> Map.put(state, :handlers, state.handlers ++ [plug])
-        :commander -> Map.put(state, :commanders, state.commanders ++ [plug])
-        :caller -> Map.put(state, :callers, state.callers ++ [plug])
-      end
-    end
+    is_installed =
+      Enum.member?(preheaters(), plug) || Enum.member?(handlers(), plug) ||
+        Enum.member?(commanders(), plug) || Enum.member?(callers(), plug)
 
-    Agent.update(__MODULE__, update_fun)
+    if is_installed do
+      :already_installed
+    else
+      update_fun = fn state ->
+        case Telegex.Plug.__preset__(plug) do
+          :preheater -> Map.put(state, :preheaters, state.preheaters ++ [plug])
+          :handler -> Map.put(state, :handlers, state.handlers ++ [plug])
+          :commander -> Map.put(state, :commanders, state.commanders ++ [plug])
+          :caller -> Map.put(state, :callers, state.callers ++ [plug])
+        end
+      end
+
+      Agent.update(__MODULE__, update_fun)
+    end
   end
 
   @doc """
