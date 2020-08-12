@@ -11,6 +11,12 @@ defmodule Telegex.Plug.Pipeline do
   alias Telegex.Model.Update
 
   @type plug :: atom()
+  @type t :: %__MODULE__{
+          preheaters: [plug],
+          handlers: [plug],
+          commanders: [plug],
+          callers: [plug]
+        }
 
   defstruct preheaters: [], handlers: [], commanders: [], callers: []
 
@@ -19,37 +25,60 @@ defmodule Telegex.Plug.Pipeline do
     Agent.start_link(fn -> %__MODULE__{} end, name: __MODULE__)
   end
 
+  @type install_opts :: [{:can_repeat, boolean}]
+
   @doc """
   Install a plug into the pipeline.
 
-  *Notes*: Repeated installation will not add plug-ins.
+  ## Arguments
+  - `plug`: The name of the module that implements the plug.
+  - `options`
+    - `can_repeat`: Whether to allow repeated installation. The default value is `false`, and repeated installation is not allowed.
+
+  *Notes*: If the value of the optional parameter `can_repeat` is `false` but an existing plug is installed, it will return `:already_installed`.
   """
-  def install(plug) when is_atom(plug) do
+  @spec install(plug, install_opts) :: :ok | :already_installed
+  def install(plug, options \\ []) when is_atom(plug) and is_list(options) do
+    can_repeat = Keyword.get(options, :can_repeat, false)
+
     is_installed =
       Enum.member?(preheaters(), plug) || Enum.member?(handlers(), plug) ||
         Enum.member?(commanders(), plug) || Enum.member?(callers(), plug)
 
-    if is_installed do
+    if is_installed && !can_repeat do
       :already_installed
     else
       update_fun = fn state ->
-        case Telegex.Plug.__preset__(plug) do
-          :preheater -> Map.put(state, :preheaters, state.preheaters ++ [plug])
-          :handler -> Map.put(state, :handlers, state.handlers ++ [plug])
-          :commander -> Map.put(state, :commanders, state.commanders ++ [plug])
-          :caller -> Map.put(state, :callers, state.callers ++ [plug])
-        end
+        preset = Telegex.Plug.__preset__(plug)
+        append_plug(preset, state, plug)
       end
 
       Agent.update(__MODULE__, update_fun)
     end
   end
 
+  @spec append_plug(Telegex.Plug.preset(), t, plug) :: t
+  defp append_plug(:preheater, state, plug),
+    do: Map.put(state, :preheaters, state.preheaters ++ [plug])
+
+  defp append_plug(:handler, state, plug),
+    do: Map.put(state, :handlers, state.handlers ++ [plug])
+
+  defp append_plug(:commander, state, plug),
+    do: Map.put(state, :commanders, state.commanders ++ [plug])
+
+  defp append_plug(:caller, state, plug),
+    do: Map.put(state, :callers, state.callers ++ [plug])
+
   @doc """
   Install multiple plugs into the pipeline.
+
+  ## Arguments
+  - `plugs`: List of `plug()`.
+  - `options`: Refer to the `options` parameter in the `Telegex.Pipeline.install/2` function.
   """
-  def install_all(plugs) when is_list(plugs) do
-    Enum.map(plugs, &install/1)
+  def install_all(plugs, options \\ []) when is_list(plugs) do
+    Enum.map(plugs, &install(&1, options))
   end
 
   @doc """
