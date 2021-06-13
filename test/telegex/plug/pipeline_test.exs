@@ -3,7 +3,7 @@ defmodule Telegex.Plug.PipelineTest do
 
   alias Telegex.Plug.Pipeline
 
-  defmodule PingCommander do
+  defmodule RespPingPlug do
     use Telegex.Plug.Presets, commander: :ping
 
     @impl true
@@ -12,7 +12,7 @@ defmodule Telegex.Plug.PipelineTest do
     end
   end
 
-  defmodule GetUpdateIDPreheater do
+  defmodule InitGetUpdateIdPlug do
     use Telegex.Plug.Presets, :preheater
 
     @impl true
@@ -21,8 +21,8 @@ defmodule Telegex.Plug.PipelineTest do
     end
   end
 
-  defmodule GetMessageTextHandler do
-    use Telegex.Plug.Presets, :handler
+  defmodule HandleMessageTextGetPlug do
+    use Telegex.Plug.Presets, :message_handler
 
     @impl true
     def match(%{text: nil} = _message, state), do: {:nomatch, state}
@@ -37,7 +37,7 @@ defmodule Telegex.Plug.PipelineTest do
     end
   end
 
-  defmodule VerificationCaller do
+  defmodule CallVerificationPlug do
     use Telegex.Plug.Presets, caller: [prefix: "verification:"]
 
     @impl true
@@ -54,29 +54,31 @@ defmodule Telegex.Plug.PipelineTest do
   end
 
   test "call/2" do
-    Pipeline.install_all([GetUpdateIDPreheater])
-    Pipeline.install_all([PingCommander])
-    Pipeline.install_all([GetMessageTextHandler])
-    Pipeline.install_all([VerificationCaller])
+    Pipeline.install_all([InitGetUpdateIdPlug])
+    Pipeline.install_all([RespPingPlug])
+    Pipeline.install_all([HandleMessageTextGetPlug])
+    Pipeline.install_all([CallVerificationPlug])
 
     update = %{update_id: 999, callback_query: nil, message: %{text: "/ping"}}
     snapshots = Pipeline.call(update, %{})
 
     assert snapshots == [
-             {GetUpdateIDPreheater, {:ok, %{update_id: 999}}},
-             {PingCommander, {:ok, %{update_id: 999, response: "pong"}}},
-             {GetMessageTextHandler, {:ok, %{response: "pong", text: "/ping", update_id: 999}}},
-             {VerificationCaller, {:ignored, %{update_id: 999}}}
+             {InitGetUpdateIdPlug, {:ok, %{update_id: 999}}},
+             {RespPingPlug, {:ok, %{update_id: 999, response: "pong"}}},
+             {HandleMessageTextGetPlug,
+              {:ok, %{response: "pong", text: "/ping", update_id: 999}}},
+             {CallVerificationPlug,
+              {:ignored, %{update_id: 999, response: "pong", text: "/ping"}}}
            ]
 
     update = %{update_id: 999, callback_query: %{data: "verification:3"}, message: nil}
     snapshots = Pipeline.call(update, %{})
 
     assert snapshots == [
-             {GetUpdateIDPreheater, {:ok, %{update_id: 999}}},
-             {PingCommander, {:ignored, %{update_id: 999}}},
-             {GetMessageTextHandler, {:ignored, %{update_id: 999}}},
-             {VerificationCaller, {:ok, %{update_id: 999, result: "success"}}}
+             {InitGetUpdateIdPlug, {:ok, %{update_id: 999}}},
+             {RespPingPlug, {:ignored, %{update_id: 999}}},
+             {HandleMessageTextGetPlug, {:ignored, %{update_id: 999}}},
+             {CallVerificationPlug, {:ok, %{update_id: 999, result: "success"}}}
            ]
   end
 end

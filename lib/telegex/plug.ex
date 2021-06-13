@@ -16,7 +16,7 @@ defmodule Telegex.Plug do
   @typedoc "Stateful call result, return type and new state."
   @type stateful :: {stateless(), state()}
   @typedoc "The preset category."
-  @type preset :: :preheater | :handler | :commander | :caller
+  @type preset :: :preheater | :message_handler | :commander | :caller | :custom
 
   @doc """
   Pass update and call.

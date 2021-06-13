@@ -7,9 +7,9 @@ defmodule Telegex.Plug.Presets do
     implement_preset(opts)
   end
 
-  defp implement_preset(:handler) do
+  defp implement_preset(:message_handler) do
     quote do
-      use Telegex.Plug.Presets.Handler
+      use Telegex.Plug.Presets.MessageHandler
     end
   end
 

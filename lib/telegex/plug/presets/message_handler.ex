@@ -1,6 +1,6 @@
-defmodule Telegex.Plug.Presets.Handler do
+defmodule Telegex.Plug.Presets.MessageHandler do
   @moduledoc """
-  Message processing plug-in.
+  Message handling plug-in.
   """
 
   @typedoc "Match results."
@@ -10,10 +10,10 @@ defmodule Telegex.Plug.Presets.Handler do
     quote do
       use Telegex.Plug
 
-      @behaviour Telegex.Plug.Presets.Handler
+      @behaviour Telegex.Plug.Presets.MessageHandler
 
       @impl true
-      def __preset__, do: :handler
+      def __preset__, do: :message_handler
 
       @impl true
       def call(%{message: nil} = _update, state) do

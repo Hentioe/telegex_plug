@@ -21,7 +21,7 @@ defmodule Telegex.PlugTest do
 
     @impl true
     def __preset__ do
-      :handler
+      :message_handler
     end
   end
 

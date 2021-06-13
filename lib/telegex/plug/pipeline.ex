@@ -12,13 +12,10 @@ defmodule Telegex.Plug.Pipeline do
 
   @type plug :: atom()
   @type t :: %__MODULE__{
-          preheaters: [plug],
-          handlers: [plug],
-          commanders: [plug],
-          callers: [plug]
+          plugs: [plug]
         }
 
-  defstruct preheaters: [], handlers: [], commanders: [], callers: []
+  defstruct plugs: []
 
   @doc false
   def start_link(_) do
@@ -37,38 +34,31 @@ defmodule Telegex.Plug.Pipeline do
 
   *Notes*: If the value of the optional parameter `can_repeat` is `false` but an existing plug is installed, it will return `:already_installed`.
   """
-  @spec install(plug, install_opts) :: :ok | :already_installed
+  @spec install(plug, install_opts) :: :ok | :already_installed | :unknown_preset
   def install(plug, options \\ []) when is_atom(plug) and is_list(options) do
     can_repeat = Keyword.get(options, :can_repeat, false)
 
-    is_installed =
-      Enum.member?(preheaters(), plug) || Enum.member?(handlers(), plug) ||
-        Enum.member?(commanders(), plug) || Enum.member?(callers(), plug)
+    is_installed = Enum.member?(plugs(), plug)
+
+    unless Telegex.Plug.__preset__(plug) in [
+             :custom,
+             :caller,
+             :commander,
+             :message_handler,
+             :preheater
+           ],
+           do: raise("Unknown preset: `#{plug}`")
 
     if is_installed && !can_repeat do
       :already_installed
     else
       update_fun = fn state ->
-        preset = Telegex.Plug.__preset__(plug)
-        append_plug(preset, state, plug)
+        %{state | plugs: state.plugs ++ [plug]}
       end
 
       Agent.update(__MODULE__, update_fun)
     end
   end
-
-  @spec append_plug(Telegex.Plug.preset(), t, plug) :: t
-  defp append_plug(:preheater, state, plug),
-    do: Map.put(state, :preheaters, state.preheaters ++ [plug])
-
-  defp append_plug(:handler, state, plug),
-    do: Map.put(state, :handlers, state.handlers ++ [plug])
-
-  defp append_plug(:commander, state, plug),
-    do: Map.put(state, :commanders, state.commanders ++ [plug])
-
-  defp append_plug(:caller, state, plug),
-    do: Map.put(state, :callers, state.callers ++ [plug])
 
   @doc """
   Install multiple plugs into the pipeline.
@@ -87,55 +77,9 @@ defmodule Telegex.Plug.Pipeline do
   def uninstall(plug) do
     filter_fun = fn current_plug -> current_plug != plug end
 
-    update_fun = fn state ->
-      case Telegex.Plug.__preset__(plug) do
-        :preheater ->
-          Map.put(state, :preheaters, Enum.filter(state.preheaters, filter_fun))
-
-        :handler ->
-          Map.put(state, :handlers, Enum.filter(state.handlers, filter_fun))
-
-        :commander ->
-          Map.put(state, :commanders, Enum.filter(state.commanders, filter_fun))
-
-        :caller ->
-          Map.put(state, :callers, Enum.filter(state.callers, filter_fun))
-      end
-    end
-
-    Agent.update(__MODULE__, update_fun)
-  end
-
-  @doc """
-  Get a list of plugs whose preset category is `handler`.
-  """
-  @spec handlers :: [atom()]
-  def handlers do
-    Agent.get(__MODULE__, fn state -> state.handlers end)
-  end
-
-  @doc """
-  Get a list of plugs whose preset category is `commander`.
-  """
-  @spec commanders :: [atom()]
-  def commanders do
-    Agent.get(__MODULE__, fn state -> state.commanders end)
-  end
-
-  @doc """
-  Get a list of plugs whose preset category is `caller`.
-  """
-  @spec callers :: [atom()]
-  def callers do
-    Agent.get(__MODULE__, fn state -> state.callers end)
-  end
-
-  @doc """
-  Get a list of plugs whose preset category is `preheater`.
-  """
-  @spec preheaters :: [atom()]
-  def preheaters do
-    Agent.get(__MODULE__, fn state -> state.preheaters end)
+    Agent.update(__MODULE__, fn state ->
+      %{state | plugs: Enum.filter(state.plugs, filter_fun)}
+    end)
   end
 
   @typep snapshot :: {atom(), Plug.stateless() | Plug.stateful()}
@@ -149,41 +93,39 @@ defmodule Telegex.Plug.Pipeline do
   """
   @spec call(Update.t(), Plug.state()) :: [snapshot()]
   def call(update, state) do
-    {state, preheaters_snapshots} = preheaters_call(preheaters(), update, state)
-    stateful_snapshots = stateful_call(commanders() ++ handlers(), update, state)
-    stateless_snapshots = stateless_call(callers(), update, state)
+    {_, snapshots, _} = Enum.reduce(plugs(), {state, [], false}, &reduce_call(update, &1, &2))
 
-    preheaters_snapshots ++ stateful_snapshots ++ stateless_snapshots
+    snapshots
   end
 
-  @spec preheaters_call([plug()], Update.t(), Plug.state()) :: {Plug.state(), [snapshot()]}
-  defp preheaters_call(plugs, update, state) do
-    snapshots = stateful_call(plugs, update, state)
+  defp reduce_call(update, plug, {stateful_state, snapshots, is_consumed}) do
+    preset = Telegex.Plug.__preset__(plug)
 
-    case List.last(snapshots) do
-      {_, {_, state}} ->
-        {state, snapshots}
+    cond do
+      preset in [:commander, :message_handler] ->
+        # 有状态的调用。
+        {_plug, {result, returns_state}} = snapshot = call_one(plug, update, stateful_state)
 
-      nil ->
-        {state, snapshots}
+        {returns_state, snapshots ++ [snapshot], result != :ignored}
+
+      preset in [:preheater, :custom] ->
+        {_plug, {_result, returns_state}} = snapshot = call_one(plug, update, stateful_state)
+
+        {returns_state, snapshots ++ [snapshot], false}
+
+      true ->
+        if is_consumed do
+          {stateful_state, snapshots ++ [{plug, {:ignored, stateful_state}}], false}
+        else
+          {_plug, _} = snapshot = call_one(plug, update, stateful_state)
+
+          {stateful_state, snapshots ++ [snapshot], true}
+        end
     end
   end
 
-  @spec stateful_call([atom()], Update.t(), Plug.state(), [snapshot()]) :: [snapshot()]
-  defp stateful_call(plugs, update, state, snapshots \\ []) do
-    {plug, plugs} = List.pop_at(plugs, 0)
-
-    if plug do
-      {_, {_, state}} = result = call_one(plug, update, state)
-      stateful_call(plugs, update, state, snapshots ++ [result])
-    else
-      snapshots
-    end
-  end
-
-  @spec stateless_call([atom()], Update.t(), Plug.state()) :: [snapshot()]
-  defp stateless_call(plugs, update, state) do
-    Enum.map(plugs, &call_one(&1, update, state))
+  def plugs() do
+    Agent.get(__MODULE__, fn state -> state.plugs end)
   end
 
   @spec call_one(atom(), Update.t(), Plug.state()) :: snapshot()
