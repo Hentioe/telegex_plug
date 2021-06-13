@@ -1,14 +1,14 @@
 defmodule TelegexPlug.MixProject do
   use Mix.Project
 
-  @description "The abstract design of Telegram's update processing."
+  @description "Plug-in design of Telegex."
   @version "0.3.0-dev"
 
   def project do
     [
       app: :telegex_plug,
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: @description,
@@ -41,10 +41,10 @@ defmodule TelegexPlug.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.22", only: :dev, runtime: false},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:telegex, "~> 0.1.0", only: [:dev, :test]}
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
+      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
+      {:telegex, "~> 0.1", only: [:dev, :test]}
     ]
   end
 end
