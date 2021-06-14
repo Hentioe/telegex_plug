@@ -2,6 +2,7 @@ defmodule Telegex.Plug.PipelineTest do
   use ExUnit.Case
 
   alias Telegex.Plug.Pipeline
+  alias Telegex.Plug.UnknownPresetError
 
   defmodule RespPingPlug do
     use Telegex.Plug.Presets, commander: :ping
@@ -53,6 +54,20 @@ defmodule Telegex.Plug.PipelineTest do
     end
   end
 
+  defmodule UnknownPresetPlug do
+    use Telegex.Plug
+
+    @impl true
+    def call(_update, state) do
+      {:ignored, state}
+    end
+
+    @impl true
+    def __preset__ do
+      :unknown
+    end
+  end
+
   test "call/2" do
     Pipeline.install_all([InitGetUpdateIdPlug])
     Pipeline.install_all([RespPingPlug])
@@ -80,5 +95,9 @@ defmodule Telegex.Plug.PipelineTest do
              {HandleMessageTextGetPlug, {:ignored, %{update_id: 999}}},
              {CallVerificationPlug, {:ok, %{update_id: 999, result: "success"}}}
            ]
+  end
+
+  test "install/2" do
+    assert_raise UnknownPresetError, fn -> Pipeline.install(UnknownPresetPlug) end
   end
 end
