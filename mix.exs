@@ -2,7 +2,7 @@ defmodule TelegexPlug.MixProject do
   use Mix.Project
 
   @description "Plug-in design of Telegex."
-  @version "0.3.0-dev"
+  @version "0.3.0"
 
   def project do
     [
