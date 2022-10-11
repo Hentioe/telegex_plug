@@ -3,7 +3,7 @@ defmodule Telegex.Plug.Presets.Caller do
   Callback processing plug-in.
   """
 
-  @typedoc "Match results."
+  @typedoc "Match result."
   @type match_result :: :match | :nomatch
 
   defmacro __using__(prefix) when is_binary(prefix) do

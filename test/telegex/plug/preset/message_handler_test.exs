@@ -34,8 +34,8 @@ defmodule Telegex.Plug.Presets.MessageHandlerTest do
 
     assert r == {:ignored, %{}}
 
-    r = UpcaseMessageTextPlug.call(%{message: %{text: "Hello world."}}, %{})
+    r = UpcaseMessageTextPlug.call(%{message: %{text: "Hello world"}}, %{})
 
-    assert r == {:ok, %{text: "HELLO WORLD."}}
+    assert r == {:ok, %{text: "HELLO WORLD"}}
   end
 end

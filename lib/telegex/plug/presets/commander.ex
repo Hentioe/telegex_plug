@@ -3,7 +3,7 @@ defmodule Telegex.Plug.Presets.Commander do
   Command processing plug-in.
   """
 
-  @typedoc "Match results."
+  @typedoc "Match result."
   @type match_result :: {:match | :nomatch, Telegex.Plug.state()}
 
   defmacro __using__(command) when is_atom(command) do

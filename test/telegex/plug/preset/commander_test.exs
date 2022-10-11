@@ -1,6 +1,8 @@
 defmodule Telegex.Plug.Presets.CommanderTest do
   use ExUnit.Case
 
+  import Telegex.Plug.Factory
+
   defmodule PingCommanderPlug do
     use Telegex.Plug.Presets, commander: :ping
 
@@ -31,35 +33,35 @@ defmodule Telegex.Plug.Presets.CommanderTest do
   test "call/2" do
     :ok = Telegex.Plug.update_username("test_bot")
 
-    r = PingCommanderPlug.call(%{message: %{text: nil}}, %{})
+    r = PingCommanderPlug.call(build_message_update(nil), %{})
 
     assert r == {:ignored, %{}}
 
-    r = PingCommanderPlug.call(%{message: %{text: "/ping1"}}, %{})
+    r = PingCommanderPlug.call(build_message_update("/ping1"), %{})
 
     assert r == {:ignored, %{}}
 
-    r = PingCommanderPlug.call(%{message: %{text: "/ping"}}, %{})
+    r = PingCommanderPlug.call(build_message_update("/ping"), %{})
 
     assert r == {:ok, %{response: "pong"}}
 
-    r = PingCommanderPlug.call(%{message: %{text: "/ping@"}}, %{})
+    r = PingCommanderPlug.call(build_message_update("/ping@"), %{})
 
     assert r == {:ignored, %{}}
 
-    r = PingCommanderPlug.call(%{message: %{text: "/ping@test_bot"}}, %{})
+    r = PingCommanderPlug.call(build_message_update("/ping@test_bot"), %{})
 
     assert r == {:ok, %{response: "pong"}}
 
-    r = CustomMatchPingCommanderPlug.call(%{message: %{text: nil}}, %{})
+    r = CustomMatchPingCommanderPlug.call(build_message_update(nil), %{})
 
     assert r == {:ignored, %{}}
 
-    r = CustomMatchPingCommanderPlug.call(%{message: %{text: "/ping1"}}, %{})
+    r = CustomMatchPingCommanderPlug.call(build_message_update("/ping1"), %{})
 
     assert r == {:ok, %{response: "pong"}}
 
-    r = CustomMatchPingCommanderPlug.call(%{message: %{text: "/ping"}}, %{})
+    r = CustomMatchPingCommanderPlug.call(build_message_update("/ping"), %{})
 
     assert r == {:ok, %{response: "pong"}}
   end

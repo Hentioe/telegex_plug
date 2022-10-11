@@ -3,6 +3,7 @@ defmodule Telegex.Plug.PipelineTest do
 
   alias Telegex.Plug.Pipeline
   alias Telegex.Plug.UnknownPresetError
+  alias Telegex.Plug.Factory.{Update, Message}
 
   defmodule RespPingPlug do
     use Telegex.Plug.Presets, commander: :ping
@@ -74,7 +75,8 @@ defmodule Telegex.Plug.PipelineTest do
     Pipeline.install_all([HandleMessageTextGetPlug])
     Pipeline.install_all([CallVerificationPlug])
 
-    update = %{update_id: 999, callback_query: nil, message: %{text: "/ping"}}
+    update = %Update{update_id: 999, message: %Message{text: "/ping"}}
+
     snapshots = Pipeline.call(update, %{})
 
     assert snapshots == [
