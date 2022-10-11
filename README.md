@@ -4,7 +4,7 @@
 [![Docs](https://img.shields.io/badge/api-docs-green.svg)](https://hexdocs.pm/telegex_plug/api-reference.html)
 [![Telegram chat link](https://img.shields.io/badge/chat-telegex-blue.svg)](https://t.me/elixir_telegex)
 
-为优雅处理 Telegex 库的更新消息而设计的一种抽象架构，用插件和管道实现独立但相关联的处理模块。
+为 Telegex 库设计的管道插件架构。
 
 ## 安装
 
