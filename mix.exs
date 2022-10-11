@@ -1,7 +1,7 @@
 defmodule TelegexPlug.MixProject do
   use Mix.Project
 
-  @description "Plug-in design of Telegex."
+  @description "Pipeline plugin architecture for Telegex"
   @version "0.3.0"
 
   def project do
@@ -41,8 +41,8 @@ defmodule TelegexPlug.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.24", only: :dev, runtime: false},
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.1", only: [:dev], runtime: false},
       {:telegex, "~> 0.1", only: [:dev, :test]}
     ]
