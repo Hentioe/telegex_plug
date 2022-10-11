@@ -2,7 +2,7 @@ defmodule TelegexPlug.MixProject do
   use Mix.Project
 
   @description "Pipeline plugin architecture for Telegex"
-  @version "0.3.0"
+  @version "0.3.1-dev"
 
   def project do
     [
